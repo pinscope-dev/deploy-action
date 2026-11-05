@@ -1,0 +1,49 @@
+name: Pinscope deploy
+description: Upload an ESP32, Zephyr or Pico build to Pinscope and roll it out to devices in waves.
+branding:
+  icon: upload-cloud
+  color: purple
+inputs:
+  token:
+    description: A Pinscope API token that may deploy (store it as a secret).
+    required: true
+  project:
+    description: The project number, from its dashboard URL.
+    required: true
+  files:
+    description: The .bin image and its .elf, separated by spaces or new lines.
+    required: true
+  rollout:
+    description: Start a rollout of the uploaded image (true or false).
+    default: 'false'
+  tag:
+    description: Roll out only to devices with this tag.
+    default: ''
+  waves:
+    description: Wave sizes in percent.
+    default: '10,50,100'
+  failures:
+    description: Stop after more than this many failed devices.
+    default: '0'
+  wait:
+    description: Wait for the rollout to end, and fail the step if it stopped.
+    default: 'false'
+  url:
+    description: The Pinscope address.
+    default: https://pinscope.dev
+runs:
+  using: composite
+  steps:
+    - shell: sh
+      env:
+        PINSCOPE_TOKEN: ${{ inputs.token }}
+        PINSCOPE_PROJECT: ${{ inputs.project }}
+        PINSCOPE_URL: ${{ inputs.url }}
+      run: |
+        set -eu
+        args=""
+        [ "${{ inputs.rollout }}" = "true" ] && args="$args --rollout"
+        [ "${{ inputs.wait }}" = "true" ] && args="$args --wait"
+        [ -n "${{ inputs.tag }}" ] && args="$args --tag ${{ inputs.tag }}"
+        curl -fsSL "$PINSCOPE_URL/ci.sh" -o "$RUNNER_TEMP/pinscope-ci.sh"
+        sh "$RUNNER_TEMP/pinscope-ci.sh" $args --waves "${{ inputs.waves }}" --failures "${{ inputs.failures }}" ${{ inputs.files }}
