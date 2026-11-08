@@ -10,6 +10,7 @@ came back on the new firmware and did not crash.
     token: ${{ secrets.PINSCOPE_TOKEN }}   # an API token that may deploy
     project: 12                           # from the dashboard URL
     files: build/app.bin build/app.elf
+    sbom: build/app.spdx                  # optional: idf.py sbom-create, for vulnerability tracking
     rollout: true
     tag: beta                             # optional: only devices tagged beta
     wait: true                            # fail the job if the rollout stops

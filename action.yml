@@ -13,6 +13,9 @@ inputs:
   files:
     description: The .bin image and its .elf, separated by spaces or new lines.
     required: true
+  sbom:
+    description: The build's SBOM files (SPDX or CycloneDX, e.g. from idf.py sbom-create or west spdx), for known-vulnerability tracking.
+    default: ''
   rollout:
     description: Start a rollout of the uploaded image (true or false).
     default: 'false'
@@ -45,5 +48,6 @@ runs:
         [ "${{ inputs.rollout }}" = "true" ] && args="$args --rollout"
         [ "${{ inputs.wait }}" = "true" ] && args="$args --wait"
         [ -n "${{ inputs.tag }}" ] && args="$args --tag ${{ inputs.tag }}"
+        for f in ${{ inputs.sbom }}; do args="$args --sbom $f"; done
         curl -fsSL "$PINSCOPE_URL/ci.sh" -o "$RUNNER_TEMP/pinscope-ci.sh"
         sh "$RUNNER_TEMP/pinscope-ci.sh" $args --waves "${{ inputs.waves }}" --failures "${{ inputs.failures }}" ${{ inputs.files }}
